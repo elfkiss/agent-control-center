@@ -2,7 +2,7 @@
 
 class AgentControlCenter {
     constructor() {
-        this.apiUrl = localStorage.getItem('apiUrl') || '';
+        this.apiUrl = localStorage.getItem('apiUrl') || 'http://localhost:18789';
         this.apiToken = localStorage.getItem('apiToken') || '';
         this.currentAgent = localStorage.getItem('currentAgent') || 'main';
         this.messages = this.loadMessages();
