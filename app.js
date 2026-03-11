@@ -2,8 +2,8 @@
 
 class AgentControlCenter {
     constructor() {
-        this.apiUrl = localStorage.getItem('apiUrl') || 'http://10.10.10.35:18789';
-        this.apiToken = localStorage.getItem('apiToken') || '6x4kaknezi7kcbmcytapsggxkrmxzh2r';
+        this.apiUrl = localStorage.getItem('apiUrl') || '';
+        this.apiToken = localStorage.getItem('apiToken') || '';
         this.currentAgent = localStorage.getItem('currentAgent') || 'main';
         this.messages = this.loadMessages();
         this.agents = [
