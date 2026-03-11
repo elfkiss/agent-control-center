@@ -1,7 +1,7 @@
 # Agent Control Center (ACC)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-v0.1.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/Version-v0.1.3-blue" alt="Version">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
   <img src="https://img.shields.io/badge/Docker-Ready-blue" alt="Docker">
 </p>
@@ -19,7 +19,7 @@
 | 小版本 | v0.1, v0.2, v1.1... | 每日 | Bug 修复、小功能优化 |
 | 大版本 | v1.0, v2.0, v3.0 | 每周 | 新功能、重大改进 |
 
-### 当前版本: v0.1.1 (2026-03-11)
+### 当前版本: v0.1.3 (2026-03-11)
 
 ## 功能特性
 
@@ -75,7 +75,11 @@ docker run -d -p 8899:80 agent-control
 
 ## 更新日志
 
-### 2026-03-11 v0.1.1
+### 2026-03-11 v0.1.3
+- [FIX] 设置默认API地址
+- [UPDATE] Docker镜像添加版本号
+
+### 2026-03-11 v0.1.2
 - [UPDATE] 优化界面加载状态
 - [UPDATE] 对话历史 localStorage 存储
 - [UPDATE] 错误处理增强
