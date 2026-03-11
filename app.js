@@ -1,20 +1,13 @@
-// AI Agent 控制中心 - 主逻辑
+// AI Agent 控制中心 - 主逻辑 v0.1.1
 
 class AgentControlCenter {
     constructor() {
         this.apiUrl = localStorage.getItem('apiUrl') || 'http://10.10.10.35:18789';
-        this.apiToken = localStorage.getItem('apiToken') || '';
-        this.currentAgent = 'main';
-        this.messages = [];
+        this.apiToken = localStorage.getItem('apiToken') || '6x4kaknezi7kcbmcytapsggxkrmxzh2r';
+        this.currentAgent = localStorage.getItem('currentAgent') || 'main';
+        this.messages = this.loadMessages();
         this.agents = [
             { id: 'main', name: 'AI Assistant', emoji: '🤖', status: '在线' },
-            { id: 'coder', name: 'Coder Agent', emoji: '💻', status: '空闲' },
-            { id: 'writer', name: 'Writer Agent', emoji: '✍️', status: '空闲' },
-            { id: 'researcher', name: 'Researcher', emoji: '🔬', status: '空闲' },
-            { id: 'analyst', name: 'Data Analyst', emoji: '📊', status: '空闲' },
-            { id: 'designer', name: 'Designer', emoji: '🎨', status: '空闲' },
-            { id: 'translator', name: 'Translator', emoji: '🌍', status: '空闲' },
-            { id: 'planner', name: 'Planner', emoji: '📝', status: '空闲' },
         ];
         
         this.init();
@@ -23,8 +16,24 @@ class AgentControlCenter {
     init() {
         this.loadSettings();
         this.renderAgentList();
+        this.renderMessages();
+        this.updateStats();
         this.bindEvents();
         this.checkConnection();
+    }
+    
+    loadMessages() {
+        try {
+            const saved = localStorage.getItem('chatMessages');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    }
+    
+    saveMessages() {
+        localStorage.setItem('chatMessages', JSON.stringify(this.messages));
+        localStorage.setItem('currentAgent', this.currentAgent);
     }
     
     loadSettings() {
@@ -32,6 +41,10 @@ class AgentControlCenter {
         document.getElementById('apiToken').value = this.apiToken;
         document.getElementById('systemPrompt').value = localStorage.getItem('systemPrompt') || '你是一个专业的 AI 助手。';
         document.getElementById('modelSelect').value = localStorage.getItem('model') || 'custom/minimax-m2.5';
+        
+        // 更新标题
+        const currentAgentData = this.agents.find(a => a.id === this.currentAgent);
+        document.getElementById('chatTitle').textContent = currentAgentData ? `${currentAgentData.emoji} ${currentAgentData.name}` : '🤖 AI Assistant';
     }
     
     saveSettings() {
@@ -70,8 +83,10 @@ class AgentControlCenter {
             const item = e.target.closest('.agent-item');
             if (item) {
                 this.currentAgent = item.dataset.id;
+                this.saveMessages();
                 this.renderAgentList();
-                document.getElementById('chatTitle').textContent = this.agents.find(a => a.id === this.currentAgent)?.emoji + ' ' + this.agents.find(a => a.id === this.currentAgent)?.name;
+                const agentData = this.agents.find(a => a.id === this.currentAgent);
+                document.getElementById('chatTitle').textContent = agentData ? `${agentData.emoji} ${agentData.name}` : '🤖 AI Assistant';
             }
         });
         
@@ -86,9 +101,12 @@ class AgentControlCenter {
         
         // 清空对话
         document.getElementById('clearBtn').addEventListener('click', () => {
-            this.messages = [];
-            this.renderMessages();
-            this.updateStats();
+            if (confirm('确定要清空对话记录吗？')) {
+                this.messages = [];
+                this.saveMessages();
+                this.renderMessages();
+                this.updateStats();
+            }
         });
         
         // 连接
@@ -102,19 +120,32 @@ class AgentControlCenter {
         const statusEl = document.getElementById('connectionStatus');
         
         try {
-            const response = await fetch(`${this.apiUrl}/v1/models`, {
-                headers: { 'Authorization': `Bearer ${this.apiToken}` }
+            // 尝试发送一个简单的请求来检测连接
+            const response = await fetch(`${this.apiUrl}/v1/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiToken}`
+                },
+                body: JSON.stringify({
+                    model: 'openclaw:main',
+                    messages: [{ role: 'user', content: 'ping' }],
+                    max_tokens: 1
+                })
             });
             
             if (response.ok) {
                 statusEl.className = 'connection-status connected';
                 statusEl.innerHTML = '<span class="status-dot"></span><span>已连接</span>';
+                return true;
             } else {
-                throw new Error('API 返回错误');
+                throw new Error(`HTTP ${response.status}`);
             }
         } catch (e) {
             statusEl.className = 'connection-status disconnected';
-            statusEl.innerHTML = '<span class="status-dot"></span><span>未连接</span>';
+            statusEl.innerHTML = `<span class="status-dot"></span><span>未连接</span>`;
+            this.showError(`连接失败: ${e.message}`);
+            return false;
         }
     }
     
@@ -127,13 +158,13 @@ class AgentControlCenter {
         // 添加用户消息
         this.messages.push({ role: 'user', content });
         this.renderMessages();
+        this.updateStats();
         input.value = '';
         
         // 显示加载状态
         this.showTyping();
         
         try {
-            const model = localStorage.getItem('model') || 'custom/minimax-m2.5';
             const systemPrompt = localStorage.getItem('systemPrompt') || '你是一个专业的 AI 助手。';
             
             const response = await fetch(`${this.apiUrl}/v1/chat/completions`, {
@@ -156,13 +187,15 @@ class AgentControlCenter {
             this.hideTyping();
             
             if (!response.ok) {
-                throw new Error(`API Error: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
             
             const data = await response.json();
             const assistantMessage = data.choices[0].message.content;
             
             this.messages.push({ role: 'assistant', content: assistantMessage });
+            this.saveMessages();
             this.renderMessages();
             this.updateStats();
             
@@ -170,7 +203,7 @@ class AgentControlCenter {
             this.hideTyping();
             this.messages.push({ 
                 role: 'assistant', 
-                content: `❌ 请求失败: ${error.message}\n\n请检查 API 设置是否正确。` 
+                content: `❌ 请求失败\n\n${error.message}\n\n请检查 API 设置是否正确。` 
             });
             this.renderMessages();
         }
@@ -199,6 +232,16 @@ class AgentControlCenter {
     renderMessages() {
         const container = document.getElementById('messages');
         
+        if (this.messages.length === 0) {
+            container.innerHTML = `
+                <div class="message">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">你好！我是 AI 助手。请问有什么可以帮助你的？</div>
+                </div>
+            `;
+            return;
+        }
+        
         container.innerHTML = this.messages.map(m => `
             <div class="message ${m.role}">
                 <div class="message-avatar">${m.role === 'user' ? '👤' : '🤖'}</div>
@@ -214,6 +257,10 @@ class AgentControlCenter {
         // 估算 token (简单估算)
         const totalChars = this.messages.reduce((sum, m) => sum + m.content.length, 0);
         document.getElementById('tokenCount').textContent = Math.ceil(totalChars / 4);
+    }
+    
+    showError(message) {
+        console.error(message);
     }
     
     escapeHtml(text) {
