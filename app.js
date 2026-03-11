@@ -110,9 +110,26 @@ class AgentControlCenter {
         });
         
         // 连接
-        document.getElementById('connectBtn').addEventListener('click', () => {
+        document.getElementById('connectBtn').addEventListener('click', async () => {
             this.saveSettings();
-            this.checkConnection();
+            const btn = document.getElementById('connectBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '连接中...';
+            btn.disabled = true;
+            
+            try {
+                const connected = await this.checkConnection();
+                if (connected) {
+                    alert('✅ 连接成功！');
+                } else {
+                    alert('❌ 连接失败，请检查 API 地址和 Token');
+                }
+            } catch (e) {
+                alert(`❌ 连接失败: ${e.message}`);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
         });
     }
     
