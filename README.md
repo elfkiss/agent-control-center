@@ -1,10 +1,25 @@
-# AI Agent 控制中心 (Agent Control Center)
+# Agent Control Center (ACC)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Version-v0.1.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+  <img src="https://img.shields.io/badge/Docker-Ready-blue" alt="Docker">
+</p>
 
 > 基于 OpenClaw 的 AI Agent 管理与控制面板
 
-## 项目介绍
+## 简介
 
-一个现代化的 AI Agent 控制中心，提供可视化的界面来管理和控制 AI Agent。
+一个现代化、可扩展的 AI Agent 控制中心，提供可视化的 Web 界面来管理和控制 AI Agent。
+
+## 版本规划
+
+| 类型 | 命名规则 | 更新频率 | 内容 |
+|------|----------|----------|------|
+| 小版本 | v0.1, v0.2, v1.1... | 每日 | Bug 修复、小功能优化 |
+| 大版本 | v1.0, v2.0, v3.0 | 每周 | 新功能、重大改进 |
+
+### 当前版本: v0.1.0 (2026-03-11)
 
 ## 功能特性
 
@@ -65,3 +80,31 @@ docker run -d -p 8899:80 agent-control
 - 基本对话界面
 - Agent 列表
 - 配置面板
+
+---
+
+## 开发规范
+
+### 分支管理
+- `main` - 主分支，稳定版本
+- `develop` - 开发分支
+
+### 提交规范
+```
+[REFIX] 修复问题
+[FEAT] 新功能
+[UPDATE] 优化改进
+[DOCS] 文档更新
+```
+
+### 更新频率
+- 每日: 小版本更新 (Bug 修复、小调整)
+- 每周: 大版本更新 (新功能)
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 许可证
+
+MIT License
