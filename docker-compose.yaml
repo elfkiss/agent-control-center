@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  agent-control-center:
+    build: .
+    container_name: openclaw-agent-control
+    ports:
+      - "8899:80"
+    restart: unless-stopped
+    environment:
+      - API_URL=http://host.docker.internal:18789
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # OpenClaw Gateway (可选，需要宿主机运行)
+  # openclaw-gateway:
+  #   image: openclaw/openclaw:latest
+  #   container_name: openclaw-gateway
+  #   ports:
+  #     - "18789:18789"
+  #   volumes:
+  #     - ./openclaw-data:/root/.openclaw
+  #   restart: unless-stopped
