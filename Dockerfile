@@ -3,6 +3,9 @@ FROM node:20-alpine
 LABEL maintainer="OpenClaw Community"
 LABEL description="OpenClaw AI Assistant Real-time Monitoring Dashboard"
 
+# 安装 docker CLI（用于 docker exec）
+RUN apk add --no-cache docker
+
 # 设置工作目录
 WORKDIR /app
 
