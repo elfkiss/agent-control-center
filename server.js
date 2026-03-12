@@ -9,7 +9,7 @@ const USE_DOCKER = process.env.USE_DOCKER === 'true';
 function execCmd(cmd) {
     try {
         if (USE_DOCKER) {
-            const fullCmd = `docker exec ${OPENCLAW_CONTAINER} ${cmd}`;
+            const fullCmd = `docker exec ${OPENCLAW_CONTAINER} /bin/sh -c '${cmd}'`;
             const stdout = execSync(fullCmd, { 
                 encoding: 'utf8',
                 timeout: 15000,
@@ -17,7 +17,8 @@ function execCmd(cmd) {
             });
             return { stdout, stderr: '' };
         } else {
-            const stdout = execSync(cmd, { 
+            const fullCmd = `/bin/sh -c '${cmd}'`;
+            const stdout = execSync(fullCmd, { 
                 encoding: 'utf8',
                 timeout: 15000 
             });
