@@ -3,607 +3,691 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Agent 控制中心</title>
+    <title>OpenClaw 实时监控看板</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0d1117;
-            --bg-card: #161b22;
-            --bg-input: #0d1117;
-            --border: #30363d;
-            --text: #c9d1d9;
-            --text-muted: #8b949e;
-            --primary: #58a6ff;
-            --primary-hover: #79b8ff;
-            --success: #3fb950;
-            --warning: #d29922;
-            --danger: #f85149;
-            --accent: #a371f7;
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --gradient-1: linear-gradient(135deg, #6366f1, #a855f7);
+            --gradient-2: linear-gradient(135deg, #10b981, #059669);
+            --gradient-3: linear-gradient(135deg, #f59e0b, #ef4444);
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg-dark);
             color: var(--text);
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
         }
         
-        .app {
-            display: grid;
-            grid-template-columns: 260px 1fr 320px;
-            height: 100vh;
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
         }
         
-        /* 左侧栏 */
-        .sidebar {
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
+        /* Header */
+        .header {
             display: flex;
-            flex-direction: column;
-        }
-        
-        .sidebar-header {
-            padding: 16px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--border);
         }
         
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--primary);
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
         }
         
-        .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        
-        .search-box {
-            margin-top: 12px;
-            position: relative;
-        }
-        
-        .search-box input {
-            width: 100%;
-            padding: 8px 12px 8px 32px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 13px;
-        }
-        
-        .search-box input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .search-icon {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+        .header .subtitle {
             color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
         }
         
-        .agent-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px;
+        .refresh-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         
-        .agent-item {
-            padding: 10px 12px;
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: background 0.15s;
-        }
-        
-        .agent-item:hover {
-            background: rgba(88, 166, 255, 0.1);
-        }
-        
-        .agent-item.active {
-            background: rgba(88, 166, 255, 0.15);
-            border: 1px solid var(--primary);
-        }
-        
-        .agent-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
         }
         
-        .agent-info {
-            flex: 1;
-            min-width: 0;
+        .refresh-btn:hover {
+            background: var(--primary-light);
         }
         
-        .agent-name {
+        .refresh-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .last-update {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        
+        .stat-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card .label {
+            color: var(--text-muted);
             font-size: 13px;
             font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
         }
         
-        .agent-status {
-            font-size: 11px;
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stat-card .value.success { color: var(--success); }
+        .stat-card .value.warning { color: var(--warning); }
+        .stat-card .value.danger { color: var(--danger); }
+        
+        .stat-card .detail {
             color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 16px 20px;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.ok {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+        
+        .status-badge.running {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary-light);
+        }
+        
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+        
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
         }
         
         .status-dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--success);
+            background: currentColor;
+            animation: pulse 2s infinite;
         }
         
-        /* 中间区域 */
-        .main {
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-dark);
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
-        .main-header {
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
         }
         
-        .chat-title {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .chat-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        
-        .btn:hover {
-            background: var(--bg-input);
-            border-color: var(--text-muted);
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-hover);
-        }
-        
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        
-        .message {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 12px;
-        }
-        
-        .message.user {
-            flex-direction: row-reverse;
-        }
-        
-        .message-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--primary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-        
-        .message.user .message-avatar {
-            background: linear-gradient(135deg, var(--primary), var(--success));
-        }
-        
-        .message-content {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            background: var(--bg-card);
-            font-size: 14px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-        }
-        
-        .message.user .message-content {
-            background: var(--primary);
-            color: #fff;
-        }
-        
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 12px 16px;
-        }
-        
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            animation: typing 1.4s infinite;
-        }
-        
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-4px); }
-        }
-        
-        .input-area {
-            padding: 16px 20px;
-            border-top: 1px solid var(--border);
-        }
-        
-        .input-wrapper {
-            display: flex;
-            gap: 12px;
-            align-items: flex-end;
-        }
-        
-        .input-wrapper textarea {
-            flex: 1;
-            padding: 12px 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 14px;
-            font-family: inherit;
-            resize: none;
-            min-height: 48px;
-            max-height: 150px;
-        }
-        
-        .input-wrapper textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .send-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: var(--primary);
-            border: none;
-            color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: background 0.15s;
-        }
-        
-        .send-btn:hover {
-            background: var(--primary-hover);
-        }
-        
-        /* 右侧栏 */
-        .config-panel {
-            background: var(--bg-card);
-            border-left: 1px solid var(--border);
-            padding: 16px;
-            overflow-y: auto;
-        }
-        
-        .config-section {
-            margin-bottom: 24px;
-        }
-        
-        .config-title {
-            font-size: 11px;
-            font-weight: 600;
+        .data-table th {
+            text-align: left;
+            padding: 10px 12px;
             color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
         }
         
-        .config-item {
-            margin-bottom: 12px;
+        .data-table td {
+            padding: 12px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
         }
         
-        .config-label {
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .data-table .mono {
+            font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
         }
         
-        .config-select, .config-input {
-            width: 100%;
-            padding: 8px 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
+        /* Channel List */
+        .channel-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .channel-item:last-child {
+            border-bottom: none;
+        }
+        
+        .channel-name {
+            font-weight: 500;
+        }
+        
+        .channel-detail {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        
+        /* Security Alerts */
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .alert-item.critical {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .alert-item.warn {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        .alert-item.info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .alert-icon {
+            font-size: 18px;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: 500;
             font-size: 13px;
         }
         
-        .config-select:focus, .config-input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .tools-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        
-        .tool-tag {
-            padding: 4px 10px;
-            background: rgba(88, 166, 255, 0.1);
-            border: 1px solid rgba(88, 166, 255, 0.3);
-            border-radius: 20px;
-            font-size: 11px;
-            color: var(--primary);
-        }
-        
-        .prompt-area textarea {
-            width: 100%;
-            height: 120px;
-            padding: 10px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            resize: vertical;
-        }
-        
-        .prompt-area textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        
-        .stat-card {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-        }
-        
-        .stat-label {
-            font-size: 10px;
+        .alert-desc {
             color: var(--text-muted);
-            text-transform: uppercase;
-        }
-        
-        .stat-value {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 12px;
             margin-top: 4px;
         }
         
-        /* API设置弹窗 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+        /* Session List */
+        .session-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            z-index: 1000;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
         }
         
-        .modal {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            width: 400px;
-            max-width: 90%;
+        .session-item:last-child {
+            border-bottom: none;
         }
         
-        .modal-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            margin-top: 16px;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        /* 连接状态 */
-        .connection-status {
-            position: fixed;
-            top: 12px;
-            right: 12px;
-            padding: 6px 12px;
-            border-radius: 20px;
+        .session-key {
+            font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 100;
+            color: var(--text-muted);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
-        .connection-status.connected {
-            background: rgba(63, 185, 80, 0.2);
-            color: var(--success);
+        .session-model {
+            font-size: 12px;
+            color: var(--primary-light);
         }
         
-        .connection-status.disconnected {
-            background: rgba(248, 81, 73, 0.2);
-            color: var(--danger);
+        .session-tokens {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        /* Empty State */
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
         }
     </style>
 </head>
 <body>
-    <div class="connection-status disconnected" id="connectionStatus">
-        <span class="status-dot"></span>
-        <span>未连接</span>
-    </div>
-    
-    <div class="app">
-        <!-- 左侧栏 -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <div class="logo-icon">🤖</div>
-                    <span>AI Control</span>
-                </div>
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" placeholder="搜索 Agent..." id="searchInput">
-                </div>
+    <div class="dashboard">
+        <div class="header">
+            <div>
+                <h1>🦞 OpenClaw 监控看板</h1>
+                <div class="subtitle">实时监控 AI 助手运行状态</div>
             </div>
-            <div class="agent-list" id="agentList">
-                <!-- Agent列表 -->
+            <div class="refresh-info">
+                <button class="refresh-btn" onclick="refreshData()" id="refreshBtn">🔄 刷新数据</button>
+                <span class="last-update" id="lastUpdate">--</span>
             </div>
         </div>
         
-        <!-- 中间区域 -->
-        <div class="main">
-            <div class="main-header">
-                <div class="chat-title" id="chatTitle">🤖 AI Assistant</div>
-                <div class="chat-actions">
-                    <button class="btn" id="clearBtn">🗑️ 清空</button>
-                    <button class="btn" id="settingsBtn">⚙️ 设置</button>
-                </div>
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Gateway 状态</div>
+                <div class="value success" id="gatewayStatus">--</div>
+                <div class="detail" id="gatewayDetail">--</div>
             </div>
-            <div class="messages" id="messages">
-                <div class="message">
-                    <div class="message-avatar">🤖</div>
-                    <div class="message-content">你好！我是 AI 助手。请问有什么可以帮助你的？</div>
-                </div>
+            <div class="stat-card">
+                <div class="label">活跃会话</div>
+                <div class="value" id="sessionCount">--</div>
+                <div class="detail" id="sessionDetail">--</div>
             </div>
-            <div class="input-area">
-                <div class="input-wrapper">
-                    <textarea id="messageInput" placeholder="输入消息..." rows="1"></textarea>
-                    <button class="send-btn" id="sendBtn">➤</button>
-                </div>
+            <div class="stat-card">
+                <div class="label">定时任务</div>
+                <div class="value" id="cronCount">--</div>
+                <div class="detail" id="cronDetail">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Token 使用</div>
+                <div class="value" id="tokenUsage">--</div>
+                <div class="detail" id="tokenDetail">--</div>
             </div>
         </div>
         
-        <!-- 右侧栏 -->
-        <div class="config-panel">
-            <div class="config-section">
-                <div class="config-title">模型</div>
-                <div class="config-item">
-                    <div class="config-label">选择模型</div>
-                    <select class="config-select" id="modelSelect">
-                        <option value="custom/minimax-m2.5">minimax-m2.5</option>
-                        <option value="custom/glm-5">glm-5</option>
-                        <option value="qwen3.5:9b">qwen3.5:9b</option>
-                    </select>
+        <div class="grid">
+            <!-- Cron Jobs -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>⏰ 定时任务</h2>
+                    <span class="status-badge ok" id="cronStatusBadge">--</span>
+                </div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>任务名称</th>
+                                <th>调度</th>
+                                <th>下次运行</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cronTable">
+                            <tr><td colspan="4" class="empty">加载中...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
-            <div class="config-section">
-                <div class="config-title">工具</div>
-                <div class="tools-list" id="toolsList">
-                    <span class="tool-tag">🔍 搜索</span>
-                    <span class="tool-tag">🌐 浏览器</span>
-                    <span class="tool-tag">💻 终端</span>
-                    <span class="tool-tag">📁 文件</span>
+            <!-- Channels -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📱 渠道状态</h2>
+                </div>
+                <div class="card-body" id="channelList">
+                    <div class="empty">加载中...</div>
                 </div>
             </div>
             
-            <div class="config-section">
-                <div class="config-title">系统提示词</div>
-                <div class="prompt-area">
-                    <textarea id="systemPrompt" placeholder="输入系统提示词...">你是一个专业的 AI 助手。</textarea>
+            <!-- Recent Sessions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>💬 最近会话</h2>
+                </div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>会话</th>
+                                <th>模型</th>
+                                <th>Token</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessionTable">
+                            <tr><td colspan="3" class="empty">加载中...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
-            <div class="config-section">
-                <div class="config-title">会话统计</div>
-                <div class="stats">
-                    <div class="stat-card">
-                        <div class="stat-label">消息数</div>
-                        <div class="stat-value" id="msgCount">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Token</div>
-                        <div class="stat-value" id="tokenCount">0</div>
-                    </div>
+            <!-- Security -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔒 安全警告</h2>
                 </div>
-            </div>
-            
-            <div class="config-section">
-                <div class="config-title">API 设置</div>
-                <div class="config-item">
-                    <div class="config-label">API 地址</div>
-                    <input type="text" class="config-input" id="apiUrl" placeholder="http://localhost:18789">
+                <div class="card-body" id="securityList">
+                    <div class="empty">加载中...</div>
                 </div>
-                <div class="config-item">
-                    <div class="config-label">API Token</div>
-                    <input type="password" class="config-input" id="apiToken" placeholder="输入 Token">
-                </div>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" id="connectBtn">连接</button>
             </div>
         </div>
     </div>
-    
-    <script src="app.js"></script>
+
+    <script>
+        let refreshInterval = null;
+        
+        async function refreshData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 刷新中...';
+            
+            try {
+                // Fetch health data
+                const healthRes = await fetch('/api/health');
+                const healthText = await healthRes.text();
+                
+                // Fetch cron list
+                const cronRes = await fetch('/api/cron');
+                const cronData = await cronRes.json();
+                
+                // Parse health from text output (since it's plain text)
+                parseAndRender(healthText, cronData);
+                
+                document.getElementById('lastUpdate').textContent = 
+                    new Date().toLocaleTimeString('zh-CN');
+            } catch (e) {
+                console.error('Refresh failed:', e);
+                // Fallback to polling from gateway
+                try {
+                    await refreshFromGateway();
+                } catch (e2) {
+                    console.error('Gateway fallback failed:', e2);
+                }
+            }
+            
+            btn.disabled = false;
+            btn.textContent = '🔄 刷新数据';
+        }
+        
+        async function refreshFromGateway() {
+            // Use gateway API directly
+            const [healthResp, cronResp] = await Promise.all([
+                fetch('http://localhost:18789/api/health'),
+                fetch('http://localhost:18789/api/cron')
+            ]);
+            
+            const healthText = await healthResp.text();
+            const cronData = await cronResp.json();
+            
+            parseAndRender(healthText, cronData);
+            document.getElementById('lastUpdate').textContent = 
+                new Date().toLocaleTimeString('zh-CN');
+        }
+        
+        function parseAndRender(healthText, cronData) {
+            // Parse health output
+            const lines = healthText.split('\n');
+            
+            // Gateway status
+            const gatewayLine = lines.find(l => l.includes('Gateway'));
+            if (gatewayLine) {
+                const reachMatch = gatewayLine.match(/reachable (\d+)ms/);
+                if (reachMatch) {
+                    document.getElementById('gatewayStatus').textContent = '在线';
+                    document.getElementById('gatewayDetail').textContent = `响应 ${reachMatch[1]}ms`;
+                }
+            }
+            
+            // Sessions
+            const sessionsLine = lines.find(l => l.includes('Sessions'));
+            if (sessionsLine) {
+                const match = sessionsLine.match(/(\d+) active/);
+                if (match) {
+                    document.getElementById('sessionCount').textContent = match[1];
+                    const tokenMatch = sessionsLine.match(/(\d+)k\/(\d+)k/);
+                    if (tokenMatch) {
+                        document.getElementById('sessionDetail').textContent = 
+                            `当前 ${tokenMatch[1]}k / ${tokenMatch[2]}k`;
+                    }
+                }
+            }
+            
+            // Parse cron jobs
+            if (cronData && cronData.jobs) {
+                renderCronJobs(cronData.jobs);
+            }
+            
+            // Channels
+            renderChannels(healthText);
+            
+            // Sessions table
+            renderSessions(healthText);
+            
+            // Security
+            renderSecurity(healthText);
+        }
+        
+        function renderCronJobs(jobs) {
+            const tbody = document.getElementById('cronTable');
+            const running = jobs.filter(j => j.status === 'running').length;
+            const ok = jobs.filter(j => j.status === 'ok').length;
+            
+            document.getElementById('cronCount').textContent = `${jobs.length}`;
+            document.getElementById('cronDetail').textContent = 
+                `${running} 运行中, ${ok} 正常`;
+            
+            document.getElementById('cronStatusBadge').innerHTML = 
+                `<span class="status-dot"></span> ${running + ok}/${jobs.length}`;
+            
+            tbody.innerHTML = jobs.slice(0, 8).map(job => `
+                <tr>
+                    <td>${job.name}</td>
+                    <td class="mono">${job.schedule}</td>
+                    <td class="mono">${job.next}</td>
+                    <td>
+                        <span class="status-badge ${job.status}">
+                            <span class="status-dot"></span>
+                            ${job.status === 'running' ? '运行中' : job.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderChannels(text) {
+            const container = document.getElementById('channelList');
+            const channelMatch = text.match(/Feishu\s+ON\s+(\w+)/);
+            
+            if (channelMatch) {
+                const state = channelMatch[1];
+                container.innerHTML = `
+                    <div class="channel-item">
+                        <div>
+                            <div class="channel-name">📱 飞书</div>
+                            <div class="channel-detail">2/2 账号配置</div>
+                        </div>
+                        <span class="status-badge ${state === 'OK' ? 'ok' : 'error'}">
+                            <span class="status-dot"></span>
+                            ${state}
+                        </span>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderSessions(text) {
+            const tbody = document.getElementById('sessionTable');
+            const sessionMatches = text.matchAll(/agent:main:cron:([a-f0-9-]+)\s+\|\s+direct\s+\|\s+(\w+)\s+\|\s+([a-z0-9-.]+)\s+\|\s+(\d+)k\/(\d+)k/g);
+            
+            const sessions = [];
+            for (const match of sessionMatches) {
+                sessions.push({
+                    key: match[1].substring(0, 8),
+                    age: match[2],
+                    model: match[3],
+                    used: match[4],
+                    max: match[5]
+                });
+            }
+            
+            document.getElementById('tokenUsage').textContent = 
+                sessions.length > 0 ? `${sessions[0].used}k` : '0';
+            document.getElementById('tokenDetail').textContent = 
+                sessions.length > 0 ? `/ ${sessions[0].max}k` : '';
+            
+            if (sessions.length > 0) {
+                tbody.innerHTML = sessions.slice(0, 5).map(s => `
+                    <tr>
+                        <td class="mono">${s.key}...</td>
+                        <td class="session-model">${s.model}</td>
+                        <td class="session-tokens">${s.used}k/${s.max}k</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty">无活跃会话</td></tr>';
+            }
+        }
+        
+        function renderSecurity(text) {
+            const container = document.getElementById('securityList');
+            
+            const criticalMatch = text.match(/(\d+) critical/);
+            const warnMatch = text.match(/(\d+) warn/);
+            
+            let html = '';
+            
+            if (criticalMatch && parseInt(criticalMatch[1]) > 0) {
+                html += `
+                    <div class="alert-item critical">
+                        <span class="alert-icon">🔴</span>
+                        <div class="alert-content">
+                            <div class="alert-title">严重安全问题</div>
+                            <div class="alert-desc">Control UI 设备认证已禁用</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (warnMatch && parseInt(warnMatch[1]) > 0) {
+                html += `
+                    <div class="alert-item warn">
+                        <span class="alert-icon">⚠️</span>
+                        <div class="alert-content">
+                            <div class="alert-title">警告</div>
+                            <div class="alert-desc">飞书文档创建可能授予权限</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (!html) {
+                html = '<div class="alert-item info"><span class="alert-icon">✅</span><div class="alert-content"><div class="alert-title">系统安全</div><div class="alert-desc">未发现安全问题</div></div></div>';
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Auto refresh every 30 seconds
+        function startAutoRefresh() {
+            refreshData();
+            refreshInterval = setInterval(refreshData, 30000);
+        }
+        
+        // Initialize
+        startAutoRefresh();
+    </script>
 </body>
 </html>

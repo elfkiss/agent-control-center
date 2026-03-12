@@ -1,24 +1,31 @@
 version: '3.8'
 
 services:
-  agent-control-center:
-    build: .
-    image: agent-control:v0.1.3
-    container_name: openclaw-agent-control-v0.1.3
+  openclaw-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: openclaw-monitor:latest
+    container_name: openclaw-monitor
     ports:
-      - "8899:80"
-    restart: unless-stopped
+      - "8899:8899"
     environment:
-      - API_URL=http://host.docker.internal:18789
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - PORT=8899
+      - TZ=Asia/Shanghai
+    volumes:
+      # 挂载 OpenClaw 路径
+      - /usr/local/bin/openclaw:/usr/local/bin/openclaw:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8899/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - openclaw-net
 
-  # OpenClaw Gateway (可选，需要宿主机运行)
-  # openclaw-gateway:
-  #   image: openclaw/openclaw:latest
-  #   container_name: openclaw-gateway
-  #   ports:
-  #     - "18789:18789"
-  #   volumes:
-  #     - ./openclaw-data:/root/.openclaw
-  #   restart: unless-stopped
+networks:
+  openclaw-net:
+    driver: bridge

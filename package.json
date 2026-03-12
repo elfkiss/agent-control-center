@@ -1,0 +1,23 @@
+{
+  "name": "openclaw-monitor",
+  "version": "1.0.0",
+  "description": "OpenClaw AI Assistant Real-time Monitoring Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'No build step required'"
+  },
+  "keywords": [
+    "openclaw",
+    "ai-assistant",
+    "monitoring",
+    "dashboard",
+    "monitor"
+  ],
+  "author": "OpenClaw Community",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
