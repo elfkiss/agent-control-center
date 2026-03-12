@@ -42,8 +42,18 @@ docker run -d -p 8899:8899 \
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
 | `PORT` | 服务端口 | `8899` |
-| `OPENCLAW_PATH` | OpenClaw CLI 路径 | `/usr/local/bin/openclaw` |
-| `REFRESH_INTERVAL` | 刷新间隔(毫秒) | `30000` |
+| `USE_DOCKER` | 是否使用 Docker 模式 | `true` |
+| `OPENCLAW_CONTAINER` | OpenClaw 容器名称 | `openclaw-gateway` |
+
+### Docker 模式
+
+当 OpenClaw 也运行在 Docker 中时，看板通过 `docker exec` 调用：
+
+```bash
+docker exec openclaw-gateway openclaw health
+```
+
+确保 `OPENCLAW_CONTAINER` 与你实际的容器名称一致。
 
 ## 数据来源
 

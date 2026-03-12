@@ -5,12 +5,24 @@ const util = require('util');
 const execPromise = util.promisify(exec);
 
 const PORT = process.env.PORT || 8899;
-const OPENCLAW_PATH = process.env.OPENCLAW_PATH || 'openclaw';
+const OPENCLAW_CONTAINER = process.env.OPENCLAW_CONTAINER || 'openclaw-gateway';
+const USE_DOCKER = process.env.USE_DOCKER === 'true';
+
+// Execute command (directly or via docker exec)
+async function execCmd(cmd) {
+    if (USE_DOCKER) {
+        const { exec: dockerExec } = require('child_process').promisify(require('child_process').exec);
+        const fullCmd = `docker exec ${OPENCLAW_CONTAINER} ${cmd}`;
+        return dockerExec(fullCmd, { timeout: 15000 });
+    } else {
+        return execPromise(cmd);
+    }
+}
 
 // Parse cron list from CLI output
 async function getCronJobs() {
     try {
-        const { stdout } = await execPromise(`${OPENCLAW_PATH} cron list 2>/dev/null`, { timeout: 10000 });
+        const { stdout } = await execCmd(`openclaw cron list 2>/dev/null`);
         const lines = stdout.trim().split('\n');
         const jobs = [];
         
@@ -65,7 +77,7 @@ async function getCronJobs() {
 // Get health status
 async function getHealth() {
     try {
-        const { stdout } = await execPromise(`${OPENCLAW_PATH} health 2>/dev/null`, { timeout: 10000 });
+        const { stdout } = await execCmd(`openclaw health 2>/dev/null`);
         return { output: stdout };
     } catch (e) {
         return { output: '', error: e.message };
@@ -75,7 +87,7 @@ async function getHealth() {
 // Get status
 async function getStatus() {
     try {
-        const { stdout } = await execPromise(`${OPENCLAW_PATH} status 2>/dev/null`, { timeout: 10000 });
+        const { stdout } = await execCmd(`openclaw status 2>/dev/null`);
         return { output: stdout };
     } catch (e) {
         return { output: '', error: e.message };

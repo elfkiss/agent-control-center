@@ -12,12 +12,13 @@ services:
     environment:
       - PORT=8899
       - TZ=Asia/Shanghai
-      # OpenClaw 安装路径（根据实际修改）
-      - OPENCLAW_PATH=/usr/local/bin/openclaw
+      # Docker模式：让容器通过docker exec调用宿主机上的OpenClaw
+      - USE_DOCKER=true
+      # OpenClaw容器名称（根据实际修改）
+      - OPENCLAW_CONTAINER=openclaw-gateway
     volumes:
-      # 挂载 OpenClaw CLI 和 Docker socket
-      - /usr/local/bin/openclaw:/usr/local/bin/openclaw:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # 挂载Docker socket，用于执行docker exec
+      - /var/run/docker.sock:/var/run/docker.sock:rw
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
