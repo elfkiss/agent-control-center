@@ -14,9 +14,9 @@ async function execCmd(cmd) {
     return new Promise((resolve, reject) => {
         if (USE_DOCKER) {
             const fullCmd = `docker exec ${OPENCLAW_CONTAINER} ${cmd}`;
-            execSync(fullCmd, { timeout: 15000 }, (error, stdout, stderr) => {
-                if (error) reject(error);
-                else resolve({ stdout, stderr });
+            execSync(fullCmd, { timeout: 15000, shell: true }, (error, stdout, stderr) => {
+                // Ignore stderr, just use stdout
+                resolve({ stdout: stdout || stderr, stderr: '' });
             });
         } else {
             execPromise(cmd).then(resolve).catch(reject);
