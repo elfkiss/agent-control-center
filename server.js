@@ -7,16 +7,21 @@ const execPromise = util.promisify(exec);
 const PORT = process.env.PORT || 8899;
 const OPENCLAW_CONTAINER = process.env.OPENCLAW_CONTAINER || 'openclaw-gateway';
 const USE_DOCKER = process.env.USE_DOCKER === 'true';
+const { exec: execSync } = require('child_process');
 
 // Execute command (directly or via docker exec)
 async function execCmd(cmd) {
-    if (USE_DOCKER) {
-        const { exec: dockerExec } = require('child_process').promisify(require('child_process').exec);
-        const fullCmd = `docker exec ${OPENCLAW_CONTAINER} ${cmd}`;
-        return dockerExec(fullCmd, { timeout: 15000 });
-    } else {
-        return execPromise(cmd);
-    }
+    return new Promise((resolve, reject) => {
+        if (USE_DOCKER) {
+            const fullCmd = `docker exec ${OPENCLAW_CONTAINER} ${cmd}`;
+            execSync(fullCmd, { timeout: 15000 }, (error, stdout, stderr) => {
+                if (error) reject(error);
+                else resolve({ stdout, stderr });
+            });
+        } else {
+            execPromise(cmd).then(resolve).catch(reject);
+        }
+    });
 }
 
 // Parse cron list from CLI output
